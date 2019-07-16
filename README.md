@@ -89,13 +89,19 @@ def shellescape(arg)
 end
 ```
 
-Alternatively, use `popen`: (actually, you should just always use
-`popen` to get the output of a 
-
+Alternatively, use `IO.popen`:
 ```ruby
 irb(main):029:0> puts IO.popen(["echo", str]).read
 a "goofy string
 ```
+
+In point of fact, you should always use `IO.popen` to get the output
+of a command in Ruby. Backticks in Ruby (and Perl) are broken. Bash's
+backticks are not as fundamentally broken, since quoted variables are
+always properly escaped. On the other hand, Bash is a very poor
+programming language for a host of reasons, and I would implore your
+or anyone to use Ruby or Perl--or especially Julia--as an alternative
+the moment you begin doing any data processing in Bash itself.
 
 Python doesn't have any of these problems. If you want to get a string
 from a shell command, simply use this memorable incantation:
@@ -258,6 +264,14 @@ JULIA
 RUBY
 TALK.MD
 ```
+
+This may not seem like a huge deal, but this demonstrates something
+very important. In the design of the OS and of Unix utilities, all
+streams are equal. To the OS, files, program output and basically all
+other interfaces the OS provides are the same kind of data: byte
+streams. While Julia is not the only language that "gets it" in terms
+of treating all IO the same, it may be the safest and nicest. (The
+competition is comprized of Bash, Perl and C)
 
 In summary, Julia has:
 
