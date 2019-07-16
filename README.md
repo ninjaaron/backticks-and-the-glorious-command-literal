@@ -1,3 +1,8 @@
+First some demonstrations of how commands and/or backticks work in
+other languages. I use Bash and Ruby for demonstration, but whatever
+is true of Ruby here is basically also true of Perl. I just use Ruby
+because it ships with an iteractive prompt.
+
 Hello
 
 ```bash
