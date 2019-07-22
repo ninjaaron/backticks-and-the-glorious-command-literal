@@ -56,20 +56,20 @@ bash
 One more:
 
 ```bash
-$ str='a "goofy string'
+$ str="a \"goofy string"
 $ echo "$str"
 a "goofy string
 $ # bash gets one right!
 ```
 
 ```ruby
-irb(main):006:0> str = 'a "goofy string'
+irb(main):004:0> str = "a \"goofy string"
 => "a \"goofy string"
-irb(main):007:0> puts `echo "#{str}"`
+irb(main):005:0> puts `echo "#{str}"`
 sh: 1: Syntax error: Unterminated quoted string
 
 => nil
-irb(main):008:0> # ruby not so much
+irb(main):006:0> # ruby not so much
 ```
 
 ```julia
@@ -80,16 +80,7 @@ julia> run(`echo $str`)
 a "goofy string
 ```
 
-
-
 (How to do it in ruby...)
-```ruby
-def shellescape(arg)
-  return "'" + arg.gsub("'", "'\\''")  + "'"
-end
-```
-
-Alternatively, use `IO.popen`:
 ```ruby
 irb(main):029:0> puts IO.popen(["echo", str]).read
 a "goofy string
@@ -155,20 +146,21 @@ julia> cmd.exec
  "echo" 
  "foo bar"
 ```
-This might perhaps remind us of the first argument taken by
-`subprocess.run` in Pyhton or `IO.popen` in Ruby--or perhaps of the
-`exec` familiy of funtions in C. Indeed, all of these arrays of
-strings eventually are handed off to one of the `exec` functions (on
-unix-like systems, anyway), meaning the process is run directly by the
-operating system without a shell being invoked. 
+
+This may remind you of the first argument taken by `subprocess.run` in
+Pyhton or `IO.popen` in Ruby--or perhaps of the `exec` familiy of
+funtions in C. Indeed, all of these arrays of strings eventually are
+handed off to one of the `exec` functions (on unix-like systems,
+anyway), meaning the process is run directly by the operating system
+without a shell being invoked.
 
 The difference with Julia is that it allows you to write the command
-more or less the way you would enter it in the shell. The secret here
-is that Julia actually contains a parser for a shell-like
-mini-language in a file called shell.jl. Yep, Julia's command literals
-are implemented in Julia directly. The backtick syntax is simply
-transformed into an invocation of the `cmd` macro, which hands the
-string off to a function called `shell_parse`.
+more or less the way you would enter it in the shell. The secret here is
+that Julia actually contains a parser for a shell-like mini-language in
+a file called shell.jl. Yep, Julia's command literals are implemented in
+Julia directly. The backtick syntax is simply transformed into an
+invocation of the `cmd` macro, which hands the string off to a function
+called `shell_parse`.
 
 However, Julia fixes one of the biggest problems with the shell:
 expansion of unquoted variables into arguments on whitespace. However,
