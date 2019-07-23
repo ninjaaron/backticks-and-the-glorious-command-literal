@@ -46,7 +46,7 @@ hello
 julia
 ```
 
-Can be fixed like this:
+Can be fixed like this (same works in Ruby):
 ```bash
 $ echo "$str"
 hello
@@ -87,12 +87,30 @@ a "goofy string
 ```
 
 In point of fact, you should always use `IO.popen` to get the output
-of a command in Ruby. Backticks in Ruby (and Perl) are broken. Bash's
-backticks are not as fundamentally broken, since quoted variables are
-always properly escaped. On the other hand, Bash is a very poor
+of a command in Ruby. Backticks in Ruby (and Perl) are broken. The
+examples we've seen so far have not been catastrophic, but consider
+The following:
+
+```ruby
+irb(main):008:0> str = 'ruby"; bash; "'
+=> "ruby\"; bash; \""
+irb(main):009:0> `echo "#{str}"`
+$
+```
+
+So, I've given myself a shell from inside Ruby. This is real
+bad. Don't use backticks in Ruby (or Perl).
+
+Bash's backticks are not as fundamentally broken, since quoted
+variables are always properly escaped. If you forget to quote, you
+can't execute a new shell, but you may to be add arbitrary command
+options, which can also lead to arbitrary code execution.
+
+However, even if you write Bash perfectly, it is a very poor
 programming language for a host of reasons, and I would implore your
 or anyone to use Ruby or Perl--or especially Julia--as an alternative
-the moment you begin doing any data processing in Bash itself.
+the moment you begin doing any data processing in Bash
+itself. c.f. https://github.com/ninjaaron/replacing-bash-scripting-with-python#if-the-shell-is-so-great-what-s-the-problem
 
 Python doesn't have any of these problems. If you want to get a string
 from a shell command, simply use this memorable incantation:
@@ -105,12 +123,13 @@ from a shell command, simply use this memorable incantation:
 a "goofy string
 ```
 
-So, what's going on here? In Bash, you must quote every variable. If
-you don't it will be expanded into arguments on whitespace. (Note that
-ZSH and Fish do _not_ have this insane behavior)
+So, what's the story with all these different programs going on here?
+In Bash, you must quote every variable. If you don't it will be
+expanded into arguments on whitespace. (Note that ZSH and Fish do
+_not_ have this insane behavior)
 
 In Ruby (and Perl), a string is built inside the backticks and they
-just send that string to a shell. This is the most disasterous
+just send that string to a shell. This is the most disastrous
 possible behavior. It's an injection vulnerability. Even if you don't
 have user input in the string, something like a file name with
 characters significant to the shell could break your pipeline unless
