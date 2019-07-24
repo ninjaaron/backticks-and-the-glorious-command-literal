@@ -174,6 +174,15 @@ handed off to one of the `exec` functions (on unix-like systems,
 anyway), meaning the process is run directly by the operating system
 without a shell being invoked.
 
+*Important note: There are some caveats about this on Windows which
+[Steven G. Johnson](https://github.com/stevengj) pointed out to me. If
+I understand correctly, the `exec` function on Windows hands the
+entire string of the command line to the process, not an array of
+strings, and some commands may use a non-standard parser. In this
+case, it is necessary to use the `Cmd` constructor with the
+`windows_verbatim` flag.
+Refer to the [docmumentation](https://docs.julialang.org/en/v1/base/base/#Base.Cmd)*
+
 The difference with Julia is that it allows you to write the command
 more or less the way you would enter it in the shell. The secret here is
 that Julia actually contains a parser for a shell-like mini-language in
