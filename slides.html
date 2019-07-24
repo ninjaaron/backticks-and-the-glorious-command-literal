@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+     p {
+         font-size: 25px;
+     }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+     .remark-code, .remark-inline-code {
+         font-family: 'Ubuntu Mono';
+         font-size: 25px;
+     }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Backticks and the Glorious Command Literal
+
+sauce: https://github.com/ninjaaron/backticks-and-the-glorious-command-literal
+
+---
+
+class: center, middle
+
+# a (not live) Demo...
+
+---
+
+```bash
+$ echo "hello, bash"
+```
+
+---
+
+```bash
+$ echo "hello, bash"
+hello, bash
+```
+
+---
+
+```ruby
+irb(main):001:0> puts `echo "hello, ruby"`
+```
+
+---
+
+```ruby
+irb(main):001:0> puts `echo "hello, ruby"`
+hello, ruby
+```
+
+---
+
+
+```julia
+julia> run(`echo "hello, julia"`)
+```
+
+---
+
+```julia
+julia> run(`echo "hello, julia"`)
+hello, julia
+```
+
+---
+
+```bash
+$ str=$'hello\nbash'
+$ echo $str
+```
+
+---
+
+```bash
+$ str=$'hello\nbash'
+$ echo $str
+hello bash
+```
+
+where's the newline?
+
+---
+
+```ruby
+irb(main):002:0> str = "hello\nruby"
+=> "hello\nruby"
+irb(main):003:0> puts `echo #{str}`
+```
+
+---
+
+```ruby
+irb(main):002:0> str = "hello\nruby"
+=> "hello\nruby"
+irb(main):003:0> puts `echo #{str}`
+```
+
+hangs indefinitely...
+
+---
+
+```julia
+julia> str = "hello\njulia"
+"hello\njulia"
+
+julia> run(`echo $str`)
+```
+
+---
+
+```julia
+julia> str = "hello\njulia"
+"hello\njulia"
+
+julia> run(`echo $str`)
+hello
+julia
+```
+
+works...
+
+---
+
+Can be fixed like this (same works in Ruby):
+
+```bash
+$ echo "$str"  # in Ruby: puts `echo "#{str}"`
+```
+
+---
+
+Can be fixed like this (same works in Ruby):
+
+```bash
+$ echo "$str"  # in Ruby: puts `echo "#{str}"`
+hello
+bash
+```
+
+---
+
+One more:
+
+```bash
+$ str="a \"goofy string"
+$ echo "$str"
+```
+
+---
+
+One more:
+
+```bash
+$ str="a \"goofy string"
+$ echo "$str"
+a "goofy string
+```
+
+Bash is OK here.
+
+---
+
+```ruby
+irb(main):004:0> str = "a \"goofy string"
+=> "a \"goofy string"
+irb(main):005:0> puts `echo "#{str}"`
+```
+
+---
+
+```ruby
+irb(main):004:0> str = "a \"goofy string"
+=> "a \"goofy string"
+irb(main):005:0> puts `echo "#{str}"`
+sh: 1: Syntax error: Unterminated quoted string
+
+=> nil
+```
+
+Ruby has problems. Also note that this command returns normally, without
+throwing an error.
+
+---
+
+```julia
+julia> str = "a \"goofy string"
+"a \"goofy string"
+
+julia> run(`echo $str`)
+```
+
+---
+
+```julia
+julia> str = "a \"goofy string"
+"a \"goofy string"
+
+julia> run(`echo $str`)
+a "goofy string
+```
+
+Works...
+
+---
+
+(How to actually do it in Ruby)
+
+```ruby
+irb(main):029:0> puts IO.popen(["echo", str]).read
+a "goofy string
+```
+---
+
+class: center, middle
+
+# Never use backtics in Ruby or Perl because...
+
+---
+
+```ruby
+irb(main):008:0> str = 'ruby"; bash; "'
+=> "ruby\"; bash; \""
+irb(main):009:0> `echo "#{str}"`
+```
+
+---
+
+class: center, middle
+
+# Python fixes all this...
+
+---
+
+# ... with this beautiful API...
+
+```python
+>>> string = "a \"goofy string"
+>>> import subprocess
+>>> print(subprocess.run(["echo", string], universal_newlines=True, stdout=subprocess.PIPE).stdout)
+a "goofy string
+```
+
+---
+
+# What's going on here?
+
+- Bash retokenizes unquoted variables on whitespace.
+- Ruby just interpolates the string right in there, like a madman.
+- Julia... does something else entirely.
+
+---
+
+# backticks in Julia create an object
+
+```julia
+julia> str = "foo bar"
+"foo bar"
+
+julia> command = `echo $str`
+`echo 'foo bar'`
+
+julia> typeof(command)
+Cmd
+```
+
+---
+
+```julia
+julia> fieldnames(Cmd)
+(:exec, :ignorestatus, :flags, :env, :dir)
+
+julia> # exec is the most interesting part
+
+julia> command.exec
+2-element Array{String,1}:
+ "echo" 
+ "foo bar"
+```
+
+---
+
+# Using exec means Julia is safe...
+
+... Unless you're using ssh or program that spawns a shell. In that
+case, use `Base.shell_escape`
+
+```julia
+julia> arg = Base.shell_escape("a problematic argument (for ssh)")
+"'a problematic argument (for ssh)'"
+```
+
+---
+
+# Other tidbits about backticks
+
+Iterables are expanded:
+
+```julia
+julia> a = 1:3
+1:3
+
+julia> `echo $a`
+`echo 1 2 3`
+```
+
+---
+
+# Other tidbits about backticks
+
+We have Cartesian products (like Bash, only not):
+
+```julia
+julia> b = 4:6
+4:6
+
+julia> # compare with `echo {1..3}{4..6}` in Bash
+
+julia> `echo $a$b`
+`echo 14 15 16 24 25 26 34 35 36`
+```
+
+---
+
+# Other tidbits about backticks
+
+No IO redirection syntax inside backticks (yet). Use `pipeline`.
+
+```julia
+julia> # Bash: echo foo | tr a-z A-Z
+
+julia> pipeline(`echo foo`, `tr a-z A-Z`) |> run;
+FOO
+```
+
+---
+
+# Other tidbits about backticks
+
+Backticks support `$()`, but it interpolates Julia expressions, not
+shell commands. (Usually what you want anyway. On the other hand,
+interpolating command output is problematic.)
+
+---
+
+# Other tidbits about backticks
+
+Non-zero exit codes throw and exception, which is what it should do,
+which is what other languages don't do.
+
+```julia
+julia> run(`cat foo`)
+cat: foo: No such file or directory
+ERROR: failed process: Process(`cat foo`, ProcessExited(1)) [1]
+Stacktrace:
+ [1] error(::String, ::Base.Process, ::String, ::Int64, ::String) at ./error.jl:42
+ [2] pipeline_error at ./process.jl:785 [inlined]
+ [3] #run#515(::Bool, ::Function, ::Cmd) at ./process.jl:726
+ [4] run(::Cmd) at ./process.jl:724
+ [5] top-level scope at none:0
+```
+
+---
+
+You can escape this in various ways:
+
+```julia
+julia> Cmd(`cat foo`; ignorestatus=true) |> run
+cat: foo: No such file or directory
+Process(`cat foo`, ProcessExited(1))
+
+julia> # or:
+
+julia> run(`cat foo`; wait=false) |> success
+false
+```
+
+---
+
+# Other tidbits about backticks
+
+Any (maybe) function that can take a file object as an argument can
+take a command to work on its output.
+
+```julia
+julia> for line in eachline(`ls /`)
+           uppercase(line) |> println
+       end
+BIN
+BOOT
+CDROM
+DEV
+ETC
+HOME
+...
+```
+
+---
+
+# Other tidbits about backticks
+
+Processes are totally async'd, so feel free to use them liberally in
+coroutines.
+
+---
+
+class: center, middle
+
+# There's more where this came from
+
+[administrative-scripting-with-julia](https://github.com/ninjaaron/administrative-scripting-with-julia)
+
+[oo-and-polymorphism-in-julia](https://github.com/ninjaaron/oo-and-polymorphism-in-julia)
+
+---
+
+class: center, middle
+
+# fin
+
+(Thundrous applause please)
+
+https://github.com/ninjaaron
+
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>

@@ -47,6 +47,7 @@ julia
 ```
 
 Can be fixed like this (same works in Ruby):
+
 ```bash
 $ echo "$str"
 hello
@@ -81,6 +82,7 @@ a "goofy string
 ```
 
 (How to do it in ruby...)
+
 ```ruby
 irb(main):029:0> puts IO.popen(["echo", str]).read
 a "goofy string
@@ -116,8 +118,7 @@ Python doesn't have any of these problems. If you want to get a string
 from a shell command, simply use this memorable incantation:
 
 ```python
->>> import subprocess
->>> string = 'a "goofy string'
+>>> string = "a \"goofy string"
 >>> import subprocess
 >>> print(subprocess.run(["echo", string], universal_newlines=True, stdout=subprocess.PIPE).stdout)
 a "goofy string
@@ -143,24 +144,24 @@ something entirely different.
 julia> str = "foo bar"
 "foo bar"
 
-julia> cmd = `echo $str`
+julia> command = `echo $str`
 `echo 'foo bar'`
 ```
 
 Backticks in Julia are actually a constructor for a literal object:
 
 ```julia
-julia> typeof(cmd)
+julia> typeof(command)
 Cmd
 
-julia> fieldnames(ans)
+julia> fieldnames(Cmd)
 (:exec, :ignorestatus, :flags, :env, :dir)
 ```
 
 The most important field here is `exec`, which is an array of strings:
 
 ```julia
-julia> cmd.exec
+julia> command.exec
 2-element Array{String,1}:
  "echo" 
  "foo bar"
@@ -182,8 +183,9 @@ invocation of the `cmd` macro, which hands the string off to a function
 called `shell_parse`.
 
 However, Julia fixes one of the biggest problems with the shell:
-expansion of unquoted variables into arguments on whitespace. However,
-there are some things which are expanded into arguments: iterables.
+expansion of unquoted variables into arguments on whitespace. On the
+other hand, there are some things which are expanded into arguments:
+iterables.
 
 ```julia
 julia> a = 1:3
@@ -194,7 +196,7 @@ julia> `echo $a`
 ```
 
 Like brace expansion in the shell, Julia's shell parser also permits building up
-Cartesian products in this way.
+Cartesian products from iterables.
 
 ```julia
 julia> b = 4:6
@@ -321,3 +323,11 @@ utilities with Julia, and some notes about Julia's regular expression
 interface.
 
 https://github.com/ninjaaron/administrative-scripting-with-julia
+
+I've also written about applying object oriented patterns in Julia, if
+you're into that sort of thing.
+
+https://github.com/ninjaaron/oo-and-polymorphism-in-julia
+
+There is another forthcoming about applying functional patterns in
+Julia. Watch this space.
