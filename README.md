@@ -324,7 +324,7 @@ built with the same libuv event loop--but provides non-blocking behavior
 without making you care about which functions are asynchronous.
 
 If you're interested in using Julia for administrative scripting as a
-safe and easy alternative to Bash (a task for which is surprisingly
+safe and easy alternative to Bash (a task for which it is surprisingly
 well-suited), you might want to look at my tutorial on github, which
 provides more information about this topic, as well as information
 about working with files and the filesystem, making command-line
